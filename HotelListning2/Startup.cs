@@ -1,7 +1,10 @@
+using HotelListning2.Configurations;
+using HotelListning2.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -27,18 +30,23 @@ namespace HotelListning2
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddControllers();
+            services.AddDbContext<DatabaseContaxt>(options =>
+                    options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddCors(o => {
                 o.AddPolicy("AllowAll", builder =>
                 builder.AllowAnyOrigin()
                 .AllowAnyMethod()
                 .AllowAnyHeader());
-            });   
+            });
+
+            services.AddAutoMapper(typeof(MapperInitilizer));
 
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "HotelListning2", Version = "v1" });
             });
+
+            services.AddControllers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
