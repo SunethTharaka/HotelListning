@@ -1,5 +1,7 @@
 using HotelListning2.Configurations;
 using HotelListning2.Data;
+using HotelListning2.IRepository;
+using HotelListning2.Repository;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -40,13 +42,14 @@ namespace HotelListning2
             });
 
             services.AddAutoMapper(typeof(MapperInitilizer));
+            services.AddTransient<IUnitOfWork, UnitOfWork>();
 
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "HotelListning2", Version = "v1" });
             });
 
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson(option => option.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
