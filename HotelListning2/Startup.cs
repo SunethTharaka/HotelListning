@@ -2,9 +2,11 @@ using HotelListning2.Configurations;
 using HotelListning2.Data;
 using HotelListning2.IRepository;
 using HotelListning2.Repository;
+using HotelListning2.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -34,6 +36,11 @@ namespace HotelListning2
 
             services.AddDbContext<DatabaseContaxt>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            services.AddAuthentication();
+            services.ConfigureIdentity();
+            services.ConfiguewJWT(Configuration);
+
             services.AddCors(o => {
                 o.AddPolicy("AllowAll", builder =>
                 builder.AllowAnyOrigin()
@@ -43,6 +50,7 @@ namespace HotelListning2
 
             services.AddAutoMapper(typeof(MapperInitilizer));
             services.AddTransient<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IAuthManager, AuthManager>();
 
             services.AddSwaggerGen(c =>
             {
@@ -50,6 +58,8 @@ namespace HotelListning2
             });
 
             services.AddControllers().AddNewtonsoftJson(option => option.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+
+            services.ConfigureVersioning();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -64,13 +74,11 @@ namespace HotelListning2
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "HotelListning2 v1"));
 
             app.UseHttpsRedirection();
-
+            app.ConfigureExceptionHandler();
             app.UseCors("AllowAll");
-
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

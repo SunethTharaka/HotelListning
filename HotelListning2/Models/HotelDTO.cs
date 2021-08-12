@@ -3,6 +3,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HotelListning2.Models
 {
+    public class UpdateHotelDTO : CreateHotelDTO
+    {
+    }
+
     public class CreateHotelDTO
     {
         [Required]

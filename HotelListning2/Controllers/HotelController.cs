@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using HotelListning2.Data;
 using HotelListning2.IRepository;
 using HotelListning2.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -32,37 +34,93 @@ namespace HotelListning2.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetHotels()
         {
-            try
-            {
-                var hotels = await _unitOfWork.Hotels.GetAll();
-                var resutl = _mapper.Map<IList<HotelDTO>>(hotels);
-                return Ok(resutl);
+            var hotels = await _unitOfWork.Hotels.GetAll();
+            var resutl = _mapper.Map<IList<HotelDTO>>(hotels);
+            return Ok(resutl);
 
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error - {ex.Message}");
-                return StatusCode(500, "Internal Server Error.");
-            }
         }
 
 
-        [HttpGet("{id:int}")]
+        [Authorize]
+        [HttpGet("{id:int}", Name = "GetHotel")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetHotel(int id)
         {
-            try
-            {
-                var hotel = await _unitOfWork.Hotels.Get(x => x.Id.Equals(id));
-                var resutl = _mapper.Map<HotelDTO>(hotel);
-                return Ok(resutl);
+            var hotel = await _unitOfWork.Hotels.Get(x => x.Id.Equals(id));
+            var resutl = _mapper.Map<HotelDTO>(hotel);
+            return Ok(resutl);
 
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error - {ex.Message}");
-                return StatusCode(500, "Internal Server Error.");
-            }
         }
 
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CreateHotel([FromBody] CreateHotelDTO hotelDTO)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError("Invalid Post Attempt");
+                return BadRequest(ModelState);
+            }
+
+            var hotel = _mapper.Map<Hotel>(hotelDTO);
+            await _unitOfWork.Hotels.Insert(hotel);
+            await _unitOfWork.Save();
+
+            return CreatedAtRoute("GetHotel", new { Id = hotel.Id }, hotel);
+        }
+
+        [HttpPut("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateHotel(int id, [FromBody] UpdateHotelDTO hotelDTO)
+        {
+            if (!ModelState.IsValid || id < 1)
+            {
+                _logger.LogError("Invalid Post Attempt");
+                return BadRequest(ModelState);
+            }
+
+            var hotel = await _unitOfWork.Hotels.Get(q => q.Id == id);
+            if (hotel == null)
+            {
+                _logger.LogError("Invalid Post Attempt");
+                return BadRequest("submitted data is invalid");
+            }
+
+            _mapper.Map(hotelDTO, hotel);
+            _unitOfWork.Hotels.Update(hotel);
+            await _unitOfWork.Save();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteHotel(int id)
+        {
+            if (id < 1)
+            {
+                _logger.LogError("Invalid Post Attempt");
+                return BadRequest(ModelState);
+            }
+
+            var hotel = await _unitOfWork.Hotels.Get(q => q.Id == id);
+            if (hotel == null)
+            {
+                _logger.LogError("Invalid Post Attempt");
+                return BadRequest("submitted data is invalid");
+            }
+
+            await _unitOfWork.Hotels.Delete(id);
+            await _unitOfWork.Save();
+
+            return NoContent();
+        }
     }
 }

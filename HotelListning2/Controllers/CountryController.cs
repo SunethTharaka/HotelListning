@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using HotelListning2.Data;
 using HotelListning2.IRepository;
 using HotelListning2.Models;
 using Microsoft.AspNetCore.Http;
@@ -27,37 +28,64 @@ namespace HotelListning2.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetCountries()
+        public async Task<IActionResult> GetCountries([FromQuery] RequestParams requestParams)
         {
-            try
-            {
-                var countries = await _unitOfWork.Countries.GetAll();
-                var resutl = _mapper.Map<IList<CountryDTO>>(countries);
-                return Ok(resutl);
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error - {ex.Message}");
-                return StatusCode(500, "Internal Server Error.");
-            }
+            var countries = await _unitOfWork.Countries.GetAll(requestParams, null);
+            var resutl = _mapper.Map<IList<CountryDTO>>(countries);
+            return Ok(resutl);
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("{id:int}", Name = "GetCountry")]
         public async Task<IActionResult> GetCountry(int id)
         {
-            try
-            {
-                var country = await _unitOfWork.Countries.Get(x => x.Id.Equals(id), new List<string> { "Hotels" });
-                var resutl = _mapper.Map<CountryDTO>(country );
-                return Ok(resutl);
+            var country = await _unitOfWork.Countries.Get(x => x.Id.Equals(id), new List<string> { "Hotels" });
+            var resutl = _mapper.Map<CountryDTO>(country);
+            return Ok(resutl);
+        }
 
-            }
-            catch (Exception ex)
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CreateCounty([FromBody] CreateCountryDTO countryDTO)
+        {
+            if (!ModelState.IsValid)
             {
-                _logger.LogError(ex, $"Error - {ex.Message}");
-                return StatusCode(500, "Internal Server Error.");
+                _logger.LogError("Invalid Post Attempt");
+                return BadRequest(ModelState);
             }
+
+            var country = _mapper.Map<Country>(countryDTO);
+            await _unitOfWork.Countries.Insert(country);
+            await _unitOfWork.Save();
+
+            return CreatedAtRoute("GetCountry", new { Id = country.Id }, country);
+        }
+
+        [HttpPut("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateCountry(int id, [FromBody] UpdateCountryDTO countryDTO)
+        {
+            if (!ModelState.IsValid || id < 1)
+            {
+                _logger.LogError("Invalid Post Attempt");
+                return BadRequest(ModelState);
+            }
+
+            var country = await _unitOfWork.Countries.Get(q => q.Id == id);
+            if (country == null)
+            {
+                _logger.LogError("Invalid Post Attempt");
+                return BadRequest("submitted data is invalid");
+            }
+
+            _mapper.Map(countryDTO, country);
+            _unitOfWork.Countries.Update(country);
+            await _unitOfWork.Save();
+
+            return NoContent();
         }
     }
 }

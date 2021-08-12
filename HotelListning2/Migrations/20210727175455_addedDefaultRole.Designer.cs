@@ -4,14 +4,16 @@ using HotelListning2.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace HotelListning2.Migrations
 {
     [DbContext(typeof(DatabaseContaxt))]
-    partial class DatabaseContaxtModelSnapshot : ModelSnapshot
+    [Migration("20210727175455_addedDefaultRole")]
+    partial class addedDefaultRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

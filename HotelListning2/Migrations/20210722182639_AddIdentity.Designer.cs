@@ -4,14 +4,16 @@ using HotelListning2.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace HotelListning2.Migrations
 {
     [DbContext(typeof(DatabaseContaxt))]
-    partial class DatabaseContaxtModelSnapshot : ModelSnapshot
+    [Migration("20210722182639_AddIdentity")]
+    partial class AddIdentity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -245,22 +247,6 @@ namespace HotelListning2.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "6e6ba7af-4537-404a-ba5e-50dd4d276db1",
-                            ConcurrencyStamp = "63bbbf46-b64f-4fd2-abaf-77ae3f6ed52a",
-                            Name = "User",
-                            NormalizedName = "USER"
-                        },
-                        new
-                        {
-                            Id = "173a224d-e13e-4e13-b7ed-15072228e31e",
-                            ConcurrencyStamp = "fa6e4b0f-70d8-408c-81df-350767a59754",
-                            Name = "Administrator",
-                            NormalizedName = "ADMINISTRATOR"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

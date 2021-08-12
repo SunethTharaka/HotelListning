@@ -7,6 +7,11 @@ using System.Threading.Tasks;
 
 namespace HotelListning2.Models
 {
+    public class UpdateCountryDTO : CreateCountryDTO
+    { 
+        public IList<HotelDTO> Hotels { get; set; }
+    }
+
     public class CountryDTO : CreateCountryDTO
     {
         public int Id { get; set; }
