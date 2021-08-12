@@ -1,4 +1,5 @@
-﻿using HotelListning2.Data;
+﻿using AspNetCoreRateLimit;
+using HotelListning2.Data;
 using HotelListning2.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -83,6 +84,45 @@ namespace HotelListning2
                 opt.DefaultApiVersion = new ApiVersion(1, 0);
                 opt.ApiVersionReader = new HeaderApiVersionReader("api-version");
             });
+        }
+
+        public static void ConfigureHttpCacheHeaders(this IServiceCollection services)
+        {
+            services.AddResponseCaching();
+            services.AddHttpCacheHeaders(
+                (exirationOpt) =>
+                {
+                    exirationOpt.MaxAge = 120;
+                    exirationOpt.CacheLocation = Marvin.Cache.Headers.CacheLocation.Private;
+                },
+                (valudationOpt) =>
+                {
+                    valudationOpt.MustRevalidate = true;
+                }
+
+                );
+        }
+
+        public static void ConfigureRateLimiting(this IServiceCollection services)
+        {
+
+            var rateLimitRule = new List<RateLimitRule>
+            {
+                new RateLimitRule
+                {
+                    Endpoint = "*",
+                    Limit =1,
+                    Period = "5s"
+                }
+            };
+            services.Configure<IpRateLimitOptions>(opt =>
+            {
+                opt.GeneralRules = rateLimitRule;
+            });
+
+            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+            services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
         }
     }
 }

@@ -2,6 +2,7 @@
 using HotelListning2.Data;
 using HotelListning2.IRepository;
 using HotelListning2.Models;
+using Marvin.Cache.Headers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -28,6 +29,8 @@ namespace HotelListning2.Controllers
         }
 
         [HttpGet]
+        [HttpCacheExpiration(CacheLocation = CacheLocation.Public, MaxAge = 60)]
+        [HttpCacheValidation(MustRevalidate = false)]
         public async Task<IActionResult> GetCountries([FromQuery] RequestParams requestParams)
         {
             var countries = await _unitOfWork.Countries.GetAll(requestParams, null);

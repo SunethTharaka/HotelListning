@@ -1,3 +1,4 @@
+using AspNetCoreRateLimit;
 using HotelListning2.Configurations;
 using HotelListning2.Data;
 using HotelListning2.IRepository;
@@ -37,11 +38,19 @@ namespace HotelListning2
             services.AddDbContext<DatabaseContaxt>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
+            services.AddMemoryCache();
+
+            services.ConfigureRateLimiting();
+            services.AddHttpContextAccessor();
+
+            services.ConfigureHttpCacheHeaders();
+
             services.AddAuthentication();
             services.ConfigureIdentity();
             services.ConfiguewJWT(Configuration);
 
-            services.AddCors(o => {
+            services.AddCors(o =>
+            {
                 o.AddPolicy("AllowAll", builder =>
                 builder.AllowAnyOrigin()
                 .AllowAnyMethod()
@@ -57,7 +66,10 @@ namespace HotelListning2
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "HotelListning2", Version = "v1" });
             });
 
-            services.AddControllers().AddNewtonsoftJson(option => option.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+            services.AddControllers(config =>
+            {
+                config.CacheProfiles.Add("120SecondsDuration", new CacheProfile { Duration = 120 });
+            }).AddNewtonsoftJson(option => option.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
             services.ConfigureVersioning();
         }
@@ -76,6 +88,11 @@ namespace HotelListning2
             app.UseHttpsRedirection();
             app.ConfigureExceptionHandler();
             app.UseCors("AllowAll");
+
+            app.UseResponseCaching();
+            //app.UseHttpCacheHeaders();
+            //app.UseIpRateLimiting();
+
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
